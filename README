@@ -1,0 +1,3 @@
+Calculates dependencies for webcomponents using HTML imports. Outputs the html needed to load the dependencies in Nostradamouse.
+
+usage: nmouse-deps.js <base path> <component path> <output file>
