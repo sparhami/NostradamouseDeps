@@ -1,8 +1,8 @@
 {
-  "name": "NostradamouseDeps",
+  "name": "nmouse-deps",
   "version": "0.0.0",
   "description": "Calculates dependencies for html imports for use with Nostradamouse",
-  "main": "index.js",
+  "main": "nmouse-deps.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
