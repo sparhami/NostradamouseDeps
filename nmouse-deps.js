@@ -1,24 +1,7 @@
-#!/usr/bin/env node
-
 var path = require('path'),
     fs = require('fs'),
-
     format = require("string-template"),
-    dir = require('node-dir'),
     htmlparser = require("htmlparser2");
-
-if(process.argv.length < 5) {
-    console.warn('usage: nmousedeps.js <base path> <component path> <output file>');
-    process.exit(1);
-}
-
-var basePath = process.argv[2],
-    componentPath = process.argv[3],
-    outputPath = process.argv[4];
-
-function getRelativePath(filename) {
-    return path.relative(basePath, filename);
-}
 
 function getDeps(filename) {
     var deps = [];
@@ -39,7 +22,11 @@ function getDeps(filename) {
     return deps;
 }
 
-function processFiles(filenames, depsMap) {
+function processFiles(basePath, filenames, depsMap) {
+    function getRelativePath(filename) {
+        return path.relative(basePath, filename);
+    }
+
     return filenames
         .filter(function(filename) {
             return !depsMap[filename];
@@ -49,11 +36,11 @@ function processFiles(filenames, depsMap) {
 
             depsMap[getRelativePath(filename)] = deps.map(getRelativePath);
 
-            processFiles(deps, depsMap);
+            processFiles(basePath, deps, depsMap);
         });
 }
 
-function generateMapping(filenames) {
+module.exports.generateMapping = function(basePath, filenames) {
     var depsMap = {},
         idMap = {};
 
@@ -61,7 +48,7 @@ function generateMapping(filenames) {
         return idMap[key];
     }
 
-    processFiles(filenames, depsMap);
+    processFiles(basePath, filenames, depsMap);
 
     Object.keys(depsMap)
         .forEach(function(key, index) {
@@ -78,7 +65,7 @@ function generateMapping(filenames) {
         });
 }
 
-function generateOutput(mapping) {
+module.exports.generateOutput = function(mapping) {
     var template = '<nmouse-dep data-id="{id}" src="{src}" deps="{deps}"></nmouse-dep>',
         depNodes = mapping
             .map(function(item) {
@@ -90,29 +77,4 @@ function generateOutput(mapping) {
         .concat(depNodes)
         .concat('</nmouse-deps>')
         .join('\n');
-}
-
-dir.readFiles(
-    basePath + '/' + componentPath,
-    {
-        match: /.html/,
-        exclude: /^\./
-    },
-    function(err, content, next) {
-        next();
-    },
-    function(err, files){
-        if (err) {
-            throw err;
-        }
-
-        var mapping = generateMapping(files),
-            output = generateOutput(mapping);
-
-        fs.writeFile(outputPath, output, function(err) {
-            if(err) {
-                throw err;
-            }
-        });
-    }
-);
+};
